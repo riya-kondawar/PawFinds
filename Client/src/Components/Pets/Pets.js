@@ -4,7 +4,7 @@ import { useAuthContext } from "../../hooks/UseAuthContext";
 
 const Pets = () => {
   const [filter, setFilter] = useState("all");
-  const [petsData, setPetsData] = useState([]);
+  const [petsData, setPetsData] = useState([]); // Initialize as an empty array
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { user } = useAuthContext();
@@ -12,36 +12,40 @@ const Pets = () => {
   useEffect(() => {
     const fetchRequests = async () => {
       if (!user || !user.token) {
-        setError('User is not authenticated');
+        setError("User is not authenticated");
         setLoading(false);
         return;
       }
-      try {
-        const response = await fetch('http://localhost:4000/approvedPets', {
-          headers: {
-            'Authorization': `Bearer ${user.token}`
-          }
-        });
-        if (!response.ok) {
-          throw new Error('Failed to fetch pets data');
-        }
-        const data = await response.json();
-        console.log(data);  // Log the data to inspect its structure
 
-        // Check if the data is an array and set petsData accordingly
+      try {
+        const response = await fetch("http://localhost:4000/approvedPets", {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch pets data");
+        }
+
+        const data = await response.json();
+        console.log("Fetched data:", data); // Inspect the API response structure
+
+        // Ensure petsData is always an array
         if (Array.isArray(data)) {
           setPetsData(data);
-        } else if (data.pets && Array.isArray(data.pets)) {
-          setPetsData(data.pets);  // Adjust this if your API returns { pets: [...] }
+        } else if (data && Array.isArray(data.pets)) {
+          setPetsData(data.pets);
         } else {
-          setError("Data format is incorrect or empty.");
-          setPetsData([]);
+          setError("Unexpected data format.");
+          setPetsData([]); // Set an empty array if the data format is incorrect
         }
 
-        setError(null); 
+        setError(null);
       } catch (error) {
-        console.error(error);
-        setError('An error occurred while fetching the data');
+        console.error("Fetch error:", error);
+        setError("An error occurred while fetching the data");
+        setPetsData([]); // Set to an empty array in case of an error
       } finally {
         setLoading(false);
       }
@@ -50,21 +54,15 @@ const Pets = () => {
     fetchRequests();
   }, [user]);
 
-  // Ensure petsData is an array before using .filter()
-  const filteredPets = Array.isArray(petsData) ? petsData.filter((pet) => {
-    if (filter === "all") {
-      return true;
-    }
-    return pet.type === filter;
-  }) : [];
+  // Filter pets based on the selected type
+  const filteredPets = Array.isArray(petsData)
+    ? petsData.filter((pet) => filter === "all" || pet.type === filter)
+    : [];
 
   return (
     <>
       <div className="filter-selection">
-        <select
-          value={filter}
-          onChange={(event) => setFilter(event.target.value)}
-        >
+        <select value={filter} onChange={(event) => setFilter(event.target.value)}>
           <option value="all">All Pets</option>
           <option value="Dog">Dogs</option>
           <option value="Cat">Cats</option>
@@ -80,9 +78,7 @@ const Pets = () => {
         ) : error ? (
           <p className="error-message">{error}</p>
         ) : filteredPets.length > 0 ? (
-          filteredPets.map((petDetail, index) => (
-            <PetsViewer pet={petDetail} key={index} />
-          ))
+          filteredPets.map((petDetail, index) => <PetsViewer pet={petDetail} key={index} />)
         ) : (
           <p className="oops-msg">Oops!... No pets available</p>
         )}
