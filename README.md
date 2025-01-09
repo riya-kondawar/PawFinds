@@ -49,6 +49,8 @@ Here are some of the key technologies and features used in this project:
 - **Admin Login Credentials**:  
   - **Username**: admin  
   - **Password**: password@123  
+  - **Username**: my mail id  
+  - **Password**: Password@123  
 
 - **dotenv**: Used for managing environment variables securely.  
 - **Helmet**: (used in `Layout.js`): Enhances application security by adding HTTP headers.  
